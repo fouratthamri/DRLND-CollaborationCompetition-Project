@@ -23,6 +23,7 @@ class Actor(nn.Module):
         """
         super(Actor, self).__init__()
         self.seed = torch.manual_seed(seed)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
         self.linear1 = nn.Linear(state_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, action_size)
@@ -35,8 +36,8 @@ class Actor(nn.Module):
 
     def forward(self, state):
         """Actor net forward pass. Takes a state as a torch tensor"""
-
         x = F.relu(self.linear1(state))
+        x = self.bn1(x)
         x = F.relu(self.linear2(x))
         x = F.tanh(self.linear3(x))
 
@@ -57,6 +58,7 @@ class Critic(nn.Module):
         """
         super(Critic, self).__init__()
         self.seed = torch.manual_seed(seed)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
         self.linear1 = nn.Linear(state_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size+action_size, hidden_size)
         self.linear3 = nn.Linear(hidden_size, 1)
@@ -70,7 +72,7 @@ class Critic(nn.Module):
     def forward(self, state, action):
         """Critic net forward pass. Takes a state as a torch tensor"""
         xs = F.relu(self.linear1(state))
-        x = torch.cat((xs, action), dim=1)
+        x = torch.cat((self.bn1(xs), action), dim=1)
         x = F.relu(self.linear2(x))
         x = self.linear3(x)
 
